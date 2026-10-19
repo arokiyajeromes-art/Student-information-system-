@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Student Information</title>
+<style>
+  :root {
+    --paper: #EEF2F7;
+    --card: #FFFFFF;
+    --ink: #1B2430;
+    --muted: #5F6B7A;
+    --line: #D3DBE6;
+    --accent: #2B5FD9;
+    --accent-dark: #1E47A8;
+    --danger: #C0392B;
+    --ok: #1F7A4D;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Trebuchet MS", "Segoe UI", Tahoma, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  header {
+    background: var(--ink);
+    color: #fff;
+    padding: 28px 20px;
+  }
+  header h1 { margin: 0; font-size: 1.7rem; letter-spacing: .01em; }
+  header p { margin: 4px 0 0; color: #AAB6C6; }
+  main {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 24px 16px 48px;
+    display: grid;
+    gap: 24px;
+  }
+  section {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 20px;
+  }
+  h2 { margin: 0 0 14px; font-size: 1.15rem; }
+  form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 14px;
+  }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  label { font-size: .9rem; font-weight: 600; }
+  input, select {
+    font: inherit;
+    padding: 9px 10px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: #fff;
+    color: var(--ink);
+  }
+  input:focus, select:focus, button:focus-visible {
+    outline: 3px solid rgba(43, 95, 217, .35);
+    border-color: var(--accent);
+  }
+  .error { color: var(--danger); font-size: .8rem; min-height: 1.1em; }
+  .actions { grid-column: 1 / -1; display: flex; gap: 10px; flex-wrap: wrap; }
+  button {
+    font: inherit;
+    font-weight: 600;
+    padding: 9px 16px;
+    border-radius: 4px;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+  }
+  button:hover { background: var(--accent-dark); }
+  button.secondary { background: #fff; color: var(--accent); }
+  button.secondary:hover { background: #E8EEFB; }
+  button.danger { background: #fff; color: var(--danger); border-color: var(--danger); padding: 5px 10px; }
+  button.danger:hover { background: #FBEAE8; }
+  button.small { padding: 5px 10px; }
+  .toolbar {
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+    margin-bottom: 14px;
+  }
+  .toolbar input { flex: 1 1 220px; }
+  .toolbar select { flex: 0 0 auto; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 640px; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); }
+  th { font-size: .85rem; color: var(--muted); cursor: pointer; user-select: none; white-space: nowrap; }
+  th:hover { color: var(--accent); }
+  td.row-actions { display: flex; gap: 6px; }
+  .empty { text-align: center; color: var(--muted); padding: 28px 8px; }
+  .stats { display: flex; gap: 28px; flex-wrap: wrap; color: var(--muted); font-size: .95rem; }
+  .stats strong { color: var(--ink); font-size: 1.2rem; display: block; }
+  .toast {
+    position: fixed; bottom: 20px; right: 20px;
+    background: var(--ink); color: #fff;
+    padding: 10px 16px; border-radius: 4px;
+    opacity: 0; transform: translateY(8px);
+    transition: opacity .2s, transform .2s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Student information</h1>
+  <p>Add, search, edit, and remove student records.</p>
+</header>
+
+<main>
+  <section aria-labelledby="form-title">
+    <h2 id="form-title">Add a student</h2>
+    <form id="studentForm" novalidate>
+      <input type="hidden" id="editId">
+
+      <div class="field">
+        <label for="name">Full name</label>
+        <input id="name" type="text" autocomplete="off">
+        <span class="error" id="nameErr"></span>
+      </div>
+
+      <div class="field">
+        <label for="studentId">Student ID</label>
+        <input id="studentId" type="text" autocomplete="off">
+        <span class="error" id="studentIdErr"></span>
+      </div>
+
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" type="email" autocomplete="off">
+        <span class="error" id="emailErr"></span>
+      </div>
+
+      <div class="field">
+        <label for="phone">Phone</label>
+        <input id="phone" type="tel" autocomplete="off">
+        <span class="error" id="phoneErr"></span>
+      </div>
+
+      <div class="field">
+        <label for="dob">Date of birth</label>
+        <input id="dob" type="date">
+        <span class="error" id="dobErr"></span>
+      </div>
+
+      <div class="field">
+        <label for="course">Course</label>
+        <select id="course">
+          <option value="">Select a course</option>
+          <option>Computer Science</option>
+          <option>Business</option>
+          <option>Engineering</option>
+          <option>Biology</option>
+          <option>Psychology</option>
+          <option>Arts</option>
+        </select>
+        <span class="error" id="courseErr"></span>
+      </div>
+
+      <div class="field">
+        <label for="year">Year</label>
+        <select id="year">
+          <option value="">Select a year</option>
+          <option>1</option><option>2</option><option>3</option><option>4</option>
+        </select>
+        <span class="error" id="yearErr"></span>
+      </div>
+
+      <div class="field">
+        <label for="gpa">GPA (0.0 to 4.0)</label>
+        <input id="gpa" type="number" step="0.01" min="0" max="4">
+        <span class="error" id="gpaErr"></span>
+      </div>
+
+      <div class="actions">
+        <button type="submit" id="saveBtn">Add student</button>
+        <button type="button" class="secondary" id="cancelBtn" hidden>Cancel edit</button>
+        <button type="reset" class="secondary" id="resetBtn">Clear form</button>
+      </div>
+    </form>
+  </section>
+
+  <section aria-labelledby="list-title">
+    <h2 id="list-title">Students</h2>
+
+    <div class="stats" aria-live="polite">
+      <div><strong id="statCount">0</strong>Students shown</div>
+      <div><strong id="statGpa">–</strong>Average GPA</div>
+    </div>
+
+    <div class="toolbar" style="margin-top:14px">
+      <input id="search" type="search" placeholder="Search by name, ID, or email" aria-label="Search students">
+      <select id="filterCourse" aria-label="Filter by course">
+        <option value="">All courses</option>
+      </select>
+      <button type="button" class="secondary" id="exportBtn">Export CSV</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th data-key="name">Name</th>
+            <th data-key="studentId">ID</th>
+            <th data-key="email">Email</th>
+            <th data-key="course">Course</th>
+            <th data-key="year">Year</th>
+            <th data-key="gpa">GPA</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function () {
+  // Data is kept in memory for this session.
+  let students = [
+    { id: 1, name: "Amina Yusuf", studentId: "S1001", email: "amina@example.com", phone: "5550101", dob: "2005-03-14", course: "Computer Science", year: "2", gpa: 3.7 },
+    { id: 2, name: "Daniel Okoro", studentId: "S1002", email: "daniel@example.com", phone: "5550102", dob: "2004-11-02", course: "Business", year: "3", gpa: 3.2 },
+    { id: 3, name: "Lena Fischer", studentId: "S1003", email: "lena@example.com", phone: "5550103", dob: "2006-06-21", course: "Biology", year: "1", gpa: 3.9 }
+  ];
+  let nextId = 4;
+  let sortKey = "name";
+  let sortDir = 1;
+
+  const $ = id => document.getElementById(id);
+  const fields = ["name", "studentId", "email", "phone", "dob", "course", "year", "gpa"];
+
+  const form = $("studentForm");
+  const tbody = $("tbody");
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
+  function toast(msg) {
+    const t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(() => t.classList.remove("show"), 2200);
+  }
+
+  function setError(field, msg) {
+    $(field + "Err").textContent = msg || "";
+  }
+
+  function validate() {
+    let ok = true;
+    const editId = Number($("editId").value) || null;
+    const v = {};
+    fields.forEach(f => { v[f] = $(f).value.trim(); setError(f, ""); });
+
+    if (v.name.length < 2) { setError("name", "Enter the student's full name."); ok = false; }
+
+    if (!/^[A-Za-z0-9-]{3,}$/.test(v.studentId)) {
+      setError("studentId", "Use at least 3 letters, numbers, or hyphens."); ok = false;
+    } else if (students.some(s => s.studentId.toLowerCase() === v.studentId.toLowerCase() && s.id !== editId)) {
+      setError("studentId", "This ID is already in use."); ok = false;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email)) { setError("email", "Enter a valid email address."); ok = false; }
+
+    if (v.phone && !/^[0-9+()\-\s]{7,15}$/.test(v.phone)) { setError("phone", "Enter 7 to 15 digits."); ok = false; }
+
+    if (!v.dob) { setError("dob", "Choose a date of birth."); ok = false; }
+    else if (new Date(v.dob) > new Date()) { setError("dob", "Date of birth can't be in the future."); ok = false; }
+
+    if (!v.course) { setError("course", "Select a course."); ok = false; }
+    if (!v.year) { setError("year", "Select a year."); ok = false; }
+
+    const g = parseFloat(v.gpa);
+    if (v.gpa === "" || isNaN(g) || g < 0 || g > 4) { setError("gpa", "Enter a GPA between 0 and 4."); ok = false; }
+
+    return ok ? { ...v, gpa: g } : null;
+  }
+
+  function resetForm() {
+    form.reset();
+    $("editId").value = "";
+    fields.forEach(f => setError(f, ""));
+    $("form-title").textContent = "Add a student";
+    $("saveBtn").textContent = "Add student";
+    $("cancelBtn").hidden = true;
+  }
+
+  form.addEventListener("submit", e => {
+    e.preventDefault();
+    const data = validate();
+    if (!data) return;
+    const editId = Number($("editId").value) || null;
+    if (editId) {
+      const i = students.findIndex(s => s.id === editId);
+      students[i] = { id: editId, ...data };
+      toast("Changes saved");
+    } else {
+      students.push({ id: nextId++, ...data });
+      toast("Student added");
+    }
+    resetForm();
+    render();
+  });
+
+  $("resetBtn").addEventListener("click", () => setTimeout(resetForm, 0));
+  $("cancelBtn").addEventListener("click", resetForm);
+
+  function startEdit(id) {
+    const s = students.find(x => x.id === id);
+    if (!s) return;
+    fields.forEach(f => { $(f).value = s[f]; });
+    $("editId").value = id;
+    $("form-title").textContent = "Edit student";
+    $("saveBtn").textContent = "Save changes";
+    $("cancelBtn").hidden = false;
+    $("name").focus();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function removeStudent(id) {
+    const s = students.find(x => x.id === id);
+    if (!s || !confirm("Delete " + s.name + "?")) return;
+    students = students.filter(x => x.id !== id);
+    if (Number($("editId").value) === id) resetForm();
+    toast("Student deleted");
+    render();
+  }
+
+  function visibleStudents() {
+    const q = $("search").value.trim().toLowerCase();
+    const course = $("filterCourse").value;
+    return students
+      .filter(s => !course || s.course === course)
+      .filter(s => !q || [s.name, s.studentId, s.email].some(x => x.toLowerCase().includes(q)))
+      .sort((a, b) => {
+        let x = a[sortKey], y = b[sortKey];
+        if (sortKey === "gpa" || sortKey === "year") { x = Number(x); y = Number(y); }
+        else { x = String(x).toLowerCase(); y = String(y).toLowerCase(); }
+        return x < y ? -sortDir : x > y ? sortDir : 0;
+      });
+  }
+
+  function render() {
+    const list = visibleStudents();
+    tbody.innerHTML = list.length
+      ? list.map(s => `
+        <tr>
+          <td>${esc(s.name)}</td>
+          <td>${esc(s.studentId)}</td>
+          <td>${esc(s.email)}</td>
+          <td>${esc(s.course)}</td>
+          <td>${esc(s.year)}</td>
+          <td>${s.gpa.toFixed(2)}</td>
+          <td class="row-actions">
+            <button class="secondary small" data-edit="${s.id}">Edit</button>
+            <button class="danger" data-del="${s.id}">Delete</button>
+          </td>
+        </tr>`).join("")
+      : `<tr><td colspan="7" class="empty">No students found. Add one using the form above.</td></tr>`;
+
+    $("statCount").textContent = list.length;
+    $("statGpa").textContent = list.length
+      ? (list.reduce((sum, s) => sum + s.gpa, 0) / list.length).toFixed(2)
+      : "–";
+
+    // keep course filter in sync with the courses in the form
+    const filter = $("filterCourse");
+    if (filter.options.length === 1) {
+      [...$("course").options].slice(1).forEach(o => {
+        const opt = document.createElement("option");
+        opt.value = opt.textContent = o.value || o.textContent;
+        filter.appendChild(opt);
+      });
+    }
+  }
+
+  tbody.addEventListener("click", e => {
+    const edit = e.target.closest("[data-edit]");
+    const del = e.target.closest("[data-del]");
+    if (edit) startEdit(Number(edit.dataset.edit));
+    if (del) removeStudent(Number(del.dataset.del));
+  });
+
+  document.querySelectorAll("th[data-key]").forEach(th => {
+    th.addEventListener("click", () => {
+      const k = th.dataset.key;
+      sortDir = sortKey === k ? -sortDir : 1;
+      sortKey = k;
+      render();
+    });
+  });
+
+  $("search").addEventListener("input", render);
+  $("filterCourse").addEventListener("change", render);
+
+  $("exportBtn").addEventListener("click", () => {
+    const list = visibleStudents();
+    if (!list.length) { toast("Nothing to export"); return; }
+    const head = ["Name", "Student ID", "Email", "Phone", "Date of birth", "Course", "Year", "GPA"];
+    const q = v => '"' + String(v).replace(/"/g, '""') + '"';
+    const rows = list.map(s => [s.name, s.studentId, s.email, s.phone, s.dob, s.course, s.year, s.gpa.toFixed(2)].map(q).join(","));
+    const blob = new Blob([[head.map(q).join(","), ...rows].join("\n")], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "students.csv";
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast("CSV exported");
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
